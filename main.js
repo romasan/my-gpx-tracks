@@ -1,4 +1,4 @@
-const distance = ([lat1, lon1], [lat2, lon2]) => {
+const calcDistance = ([lat1, lon1], [lat2, lon2]) => {
     const {sin, cos, acos, PI} = Math;
 	const radlat1 = PI * lat1 / 180;
 	const radlat2 = PI * lat2 / 180;
@@ -21,13 +21,71 @@ const YReady = new Promise((resove) => {
 
 const getFileList = fetch('./tracks.list')
     .then(resp => resp.text())
-    .then(text => {
-        return text.split(/[\n\r]+/).filter(e => e);
-    });
+    .then(text => text.split(/[\n\r]+/).filter(e => e));
 
-Object.defineProperty(Array.prototype, 'first', {get () {return this[0];}});
-Object.defineProperty(Array.prototype, 'last', {get () {return this.length && this[this.length - 1] || undefined}});
-// Object.defineProperty(Array.prototype, 'shuffle', {'value': function () {return this.sort(() => Math.random() - .5)}});
+const handleFileSelect = e => new Promise(resolve => {
+
+    let file = e.target.files[0];
+
+    const reader = new FileReader();
+
+    reader.onload = e => {
+        resolve(e.target.result);
+    };
+
+    if (file.name.includes('.gpx')) {
+        reader.readAsText(file);
+    }
+});
+
+const addLineString = (map, conf = {}) => {
+    
+    map.geoObjects.add(
+        new ymaps.GeoObject({
+            'geometry': {
+                'type': "LineString",
+                'coordinates': conf.coordinates
+            },
+            'properties': {
+                'hintContent': conf.label,
+            }   
+        }, {
+            'draggable': true,
+            'strokeColor': conf.color,
+            'strokeWidth': 3,
+            'strokeOpacity': 0.7
+        })
+    );
+};
+
+const parseGPX = raw => {
+    let el = document.createElement('div');
+    el.innerHTML = raw;
+    const label = el.children[0].children[1].children[0].innerText;
+    // const date = new Date(el.children[0].children[0].children[0].innerText);
+    const date = el.children[0].children[0].children[0].innerText.replace(/[TZ]/g, ' ');
+    const segments = [...el.children[0].children[1].children[2].children];
+    let coordinates = segments
+        .map(item => ([
+            parseFloat(item.attributes[0].value),
+            parseFloat(item.attributes[1].value),
+        ]));
+
+    const distance = coordinates.reduce((res, item) => ({
+        'sum': (res.prev
+            ? res.sum + calcDistance(res.prev, item)
+            : res.sum
+        ),
+        'prev': item
+    }), {'sum': 0}).sum.toFixed(2);
+    
+    const duration = ((
+        new Date(segments[segments.length - 1].children[1].innerText) -
+        new Date(segments[0].children[1].innerText)
+    ) / 36e5).toFixed(2);
+
+    return {coordinates, label, date, distance, duration};
+};
 
 const init = tracks => {
 
@@ -37,56 +95,51 @@ const init = tracks => {
         'controls': ['zoomControl']
     });
 
-    tracks = tracks.map(name => fetch('./' + name)
+    document.querySelector('input').addEventListener('change', e => {
+        handleFileSelect(e)
+            .then(raw => {
+
+                const {coordinates, label, date, distance, duration} = parseGPX(raw);
+
+                addLineString(myMap, {
+                    coordinates,
+                    'label': `
+                        ${label}
+                        <div style="color: grey">${date}</div>
+                        <div style="color: grey">${distance} km. ${duration} hrs.</div>
+                    `,
+                    'color': randomColor()
+                });
+
+                myMap.setBounds(myMap.geoObjects.getBounds());
+            })
+    }, false);
+
+    tracks = tracks.map(name => fetch(name)
         .then(resp => resp.text())
         .then(raw => {
-            let el = document.createElement('div');
-            el.innerHTML = raw;
-            const name = el.children[0].children[1].children[0].innerText;
-            // const date = new Date(el.children[0].children[0].children[0].innerText);
-            const date = el.children[0].children[0].children[0].innerText.replace(/[TZ]/g, ' ');
-            const segments = [...el.children[0].children[1].children[2].children];
-            let data = segments
-                .map(item => ([
-                    parseFloat(item.attributes[0].value),
-                    parseFloat(item.attributes[1].value),
-                ]));
 
-            const dist = data.reduce((res, item) => ({
-                'sum': (res.prev
-                    ? res.sum + distance(res.prev, item)
-                    : res.sum
-                ),
-                'prev': item
-            }), {'sum': 0}).sum.toFixed(2);
-            
-            const duration = ((new Date(segments.last.children[1].innerText) - new Date(segments.first.children[1].innerText)) / 36e5).toFixed(2)
-            
-            var myGeoObject = new ymaps.GeoObject({
-                'geometry': {
-                    'type': "LineString",
-                    'coordinates': data
-                },
-                'properties': {
-                    'hintContent': `
-                        ${name}
+            if (raw) {
+
+                const {coordinates, label, date, distance, duration} = parseGPX(raw);
+
+                addLineString(myMap, {
+                    coordinates,
+                    'label': `
+                        ${label}
                         <div style="color: grey">${date}</div>
-                        <div style="color: grey">${dist} km. ${duration} hrs.</div>
+                        <div style="color: grey">${distance} km. ${duration} hrs.</div>
                     `,
-                }   
-            }, {
-                'draggable': true,
-                'strokeColor': randomColor(),
-                'strokeWidth': 3,
-                'strokeOpacity': 0.7
-            });
-        
-            myMap.geoObjects.add(myGeoObject);
+                    'color': randomColor()
+                });
+            }
+
         }));
 
     Promise.all(tracks)
         .then(() => {
-            myMap.setBounds(myMap.geoObjects.getBounds());
+            const bounds = myMap.geoObjects.getBounds();
+            bounds && myMap.setBounds(bounds);
         });
 };
 
