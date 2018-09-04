@@ -62,7 +62,6 @@ const parseGPX = raw => {
     let el = document.createElement('div');
     el.innerHTML = raw;
     const label = el.children[0].children[1].children[0].innerText;
-    // const date = new Date(el.children[0].children[0].children[0].innerText);
     const date = el.children[0].children[0].children[0].innerText.replace(/[TZ]/g, ' ');
     const segments = [...el.children[0].children[1].children[2].children];
     let coordinates = segments

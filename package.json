@@ -1,5 +1,5 @@
 {
-  "name": "my_tracks",
+  "name": "my_gpx_tracks",
   "version": "1.0.0",
   "description": "My bike tracks viewer from strava export",
   "scripts": {
