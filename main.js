@@ -1,68 +1,96 @@
-ymaps.ready(init);
+const distance = ([lat1, lon1], [lat2, lon2]) => {
+    const {sin, cos, acos, PI} = Math;
+	const radlat1 = PI * lat1 / 180;
+	const radlat2 = PI * lat2 / 180;
+	const theta = lon1 - lon2;
+    const radtheta = PI * theta / 180;
+	let dist = sin(radlat1) * sin(radlat2) + cos(radlat1) * cos(radlat2) * cos(radtheta);
+    dist = dist > 1 ? 1 : dist;
+	dist = acos(dist);
+	dist = dist * 180 / PI;
+    dist = dist * 60 * 1.1515;
+    dist = dist * 1.60934;
+	return dist;
+};
 
-function init() {
-    // Создаем карту.
+const randomColor = () => '#' + (~~(Math.random() * 0xefffff) + 0x100000).toString(0x10);
+
+const YReady = new Promise((resove) => {
+    ymaps.ready(resove);
+});
+
+const getFileList = fetch('./tracks.list')
+    .then(resp => resp.text())
+    .then(text => {
+        return text.split(/[\n\r]+/).filter(e => e);
+    });
+
+Object.defineProperty(Array.prototype, 'first', {get () {return this[0];}});
+Object.defineProperty(Array.prototype, 'last', {get () {return this.length && this[this.length - 1] || undefined}});
+// Object.defineProperty(Array.prototype, 'shuffle', {'value': function () {return this.sort(() => Math.random() - .5)}});
+
+const init = tracks => {
+
     var myMap = new ymaps.Map("map", {
-            center: [55.72, 37.44],
-            zoom: 10
-        }, {
-            searchControlProvider: 'yandex#search'
-        });
+        'center': [0.0, 0.0],
+        'zoom': 10,
+        'controls': ['zoomControl']
+    });
 
-    // Создаем ломаную, используя класс GeoObject.
-    var myGeoObject = new ymaps.GeoObject({
-            // Описываем геометрию геообъекта.
-            geometry: {
-                // Тип геометрии - "Ломаная линия".
-                type: "LineString",
-                // Указываем координаты вершин ломаной.
-                coordinates: [
-                    [55.80, 37.50],
-                    [55.70, 37.40]
-                ]
-            },
-            // Описываем свойства геообъекта.
-            properties:{
-                // Содержимое хинта.
-                hintContent: "Я геообъект",
-                // Содержимое балуна.
-                balloonContent: "Меня можно перетащить"
-            }
-        }, {
-            // Задаем опции геообъекта.
-            // Включаем возможность перетаскивания ломаной.
-            draggable: true,
-            // Цвет линии.
-            strokeColor: "#FFFF00",
-            // Ширина линии.
-            strokeWidth: 5
-        });
+    tracks = tracks.map(name => fetch('./' + name)
+        .then(resp => resp.text())
+        .then(raw => {
+            let el = document.createElement('div');
+            el.innerHTML = raw;
+            const name = el.children[0].children[1].children[0].innerText;
+            // const date = new Date(el.children[0].children[0].children[0].innerText);
+            const date = el.children[0].children[0].children[0].innerText.replace(/[TZ]/g, ' ');
+            const segments = [...el.children[0].children[1].children[2].children];
+            let data = segments
+                .map(item => ([
+                    parseFloat(item.attributes[0].value),
+                    parseFloat(item.attributes[1].value),
+                ]));
 
-    // Создаем ломаную с помощью вспомогательного класса Polyline.
-    var myPolyline = new ymaps.Polyline([
-            // Указываем координаты вершин ломаной.
-            [55.80, 37.50],
-            [55.80, 37.40],
-            [55.70, 37.50],
-            [55.70, 37.40]
-        ], {
-            // Описываем свойства геообъекта.
-            // Содержимое балуна.
-            balloonContent: "Ломаная линия"
-        }, {
-            // Задаем опции геообъекта.
-            // Отключаем кнопку закрытия балуна.
-            balloonCloseButton: false,
-            // Цвет линии.
-            strokeColor: "#000000",
-            // Ширина линии.
-            strokeWidth: 4,
-            // Коэффициент прозрачности.
-            strokeOpacity: 0.5
-        });
+            const dist = data.reduce((res, item) => ({
+                'sum': (res.prev
+                    ? res.sum + distance(res.prev, item)
+                    : res.sum
+                ),
+                'prev': item
+            }), {'sum': 0}).sum.toFixed(2);
+            
+            const duration = ((new Date(segments.last.children[1].innerText) - new Date(segments.first.children[1].innerText)) / 36e5).toFixed(2)
+            
+            var myGeoObject = new ymaps.GeoObject({
+                'geometry': {
+                    'type': "LineString",
+                    'coordinates': data
+                },
+                'properties': {
+                    'hintContent': `
+                        ${name}
+                        <div style="color: grey">${date}</div>
+                        <div style="color: grey">${dist} km. ${duration} hrs.</div>
+                    `,
+                }   
+            }, {
+                'draggable': true,
+                'strokeColor': randomColor(),
+                'strokeWidth': 3,
+                'strokeOpacity': 0.7
+            });
+        
+            myMap.geoObjects.add(myGeoObject);
+        }));
 
-    // Добавляем линии на карту.
-    myMap.geoObjects
-        .add(myGeoObject)
-        .add(myPolyline);
-}
+    Promise.all(tracks)
+        .then(() => {
+            myMap.setBounds(myMap.geoObjects.getBounds());
+        });
+};
+
+Promise.all([
+    getFileList,
+    YReady
+]).then(([tracks]) => init(tracks));

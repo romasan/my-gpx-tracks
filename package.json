@@ -1,0 +1,14 @@
+{
+  "name": "my_tracks",
+  "version": "1.0.0",
+  "description": "My bike tracks viewer from strava export",
+  "scripts": {
+    "start": "ls -1 | grep .gpx > tracks.list && node ./node_modules/http-server/bin/http-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Roman Bauer",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}
