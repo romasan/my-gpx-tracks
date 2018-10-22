@@ -1,3 +1,5 @@
+import get from 'lodash/get';
+
 const calcDistance = ([lat1, lon1], [lat2, lon2]) => {
     const {sin, cos, acos, PI} = Math;
 	const radlat1 = PI * lat1 / 180;
@@ -61,9 +63,9 @@ const addLineString = (map, conf = {}) => {
 const parseGPX = raw => {
     let el = document.createElement('div');
     el.innerHTML = raw;
-    const label = el.children[0].children[1].children[0].innerText;
-    const date = el.children[0].children[0].children[0].innerText.replace(/[TZ]/g, ' ');
-    const segments = [...el.children[0].children[1].children[2].children];
+    const label = get(el, 'children[0].children[1].children[0].innerText');
+    const date = get(el, 'children[0].children[0].children[0].innerText', '').replace(/[TZ]/g, ' ');
+    const segments = [...get(el, 'children[0].children[1].children[2].children', [])];
     let coordinates = segments
         .map(item => ([
             parseFloat(item.attributes[0].value),
@@ -79,8 +81,8 @@ const parseGPX = raw => {
     }), {'sum': 0}).sum.toFixed(2);
     
     const duration = ((
-        new Date(segments[segments.length - 1].children[1].innerText) -
-        new Date(segments[0].children[1].innerText)
+        new Date(get(segments, '[segments.length - 1].children[1].innerText')) -
+        new Date(get(segments, '[0].children[1].innerText'))
     ) / 36e5).toFixed(2);
 
     return {coordinates, label, date, distance, duration};
