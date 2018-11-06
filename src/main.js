@@ -17,8 +17,8 @@ const calcDistance = ([lat1, lon1], [lat2, lon2]) => {
 
 const randomColor = () => '#' + (~~(Math.random() * 0xefffff) + 0x100000).toString(0x10);
 
-const YReady = new Promise((resove) => {
-    ymaps.ready(resove);
+const YReady = new Promise((resolve) => {
+    ymaps.ready(resolve);
 });
 
 const getFileList = fetch('./tracks.list')
