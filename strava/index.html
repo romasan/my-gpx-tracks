@@ -1,5 +1,14 @@
 <script>
-let search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [k, e])=>({...l, [k]: e}), {});
+console.log('v0.0.1');
+const get = url => fetch(url, {
+    method: 'GET',
+    headers: new Headers({
+        Authorization: 'Bearer 8634262d3930f357a8bf3ab8a4f9314f370d6898'
+    })
+});
+
+const search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [k, e])=>({...l, [k]: e}), {});
+
 if (search.code) {
     console.log('case 1', search);
 } else {
