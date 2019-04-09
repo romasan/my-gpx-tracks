@@ -1,9 +1,9 @@
 <script>
-console.log('v0.0.3');
-const get = url => fetch(url, {
+console.log('v0.0.4');
+const get = (url, token) => fetch(url, {
     method: 'GET',
     headers: new Headers({
-        Authorization: 'Bearer 8634262d3930f357a8bf3ab8a4f9314f370d6898'
+        Authorization: 'Bearer ' + token
     })
 });
 
@@ -12,21 +12,14 @@ const search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [
 if (search.code) {
     console.log('case 1', search);
 } else {
-    get('https://www.strava.com/api/v3/athlete')
-    .then(e => e.json())
-    .then(e => {
-        if (e.id) {
-            console.log('case 2', e);
-            // location.href = ('https://www.strava.com/oauth/authorize' + 
-            //     '?client_id={id}' + 
-            //     '&redirect_uri=http://roma.nbauer.ru/my_gpx_tracks/strava' + 
-            //     '&response_type=code' + 
-            //     '&scope=read')
-            //     .replace('{id}', e.id);
-        } else {
-            console.log('case 3');
-            console.log(e);
-        }
-    });
+    location.href = 'https://www.strava.com/oauth/authorize?' + [{
+        client_id: '29536',
+        redirect_uri: location.href.split('?')[0],
+        response_type: 'code',
+        scope: 'read'
+    }]
+    .reduce((x,o)=>(Object.entries(o)), 0)
+    .map(([k,e])=>k+'='+e)
+    .join('&')
 }
 </script>
