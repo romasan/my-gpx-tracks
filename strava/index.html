@@ -1,0 +1,4 @@
+<script>
+let search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [k, e])=>({...l, [k]: e}), {});
+console.log(search);
+</script>
