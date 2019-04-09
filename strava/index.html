@@ -1,5 +1,5 @@
 <script>
-console.log('v0.0.4');
+console.log('v0.0.5');
 const get = (url, token) => fetch(url, {
     method: 'GET',
     headers: new Headers({
@@ -10,7 +10,21 @@ const get = (url, token) => fetch(url, {
 const search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [k, e])=>({...l, [k]: e}), {});
 
 if (search.code) {
-    console.log('case 1', search);
+
+    fetch('https://www.strava.com/oauth/token?' + [{
+            client_id: 'YOUR_CLIENT_ID',
+            client_secret: 'YOUR_CLIENT_SECRET',
+            code: 'AUTHORIZATION_CODE_FROM_STRAVA',
+            grant_type: 'authorization_code'
+        }]
+        .reduce((x,o)=>(Object.entries(o)), 0)
+        .map(([k,e])=>k+'='+e)
+        .join('&')
+    )
+    .then(e => e.json())
+    then(e => {
+        console.log('token', e);
+    })
 } else {
     location.href = 'https://www.strava.com/oauth/authorize?' + [{
         client_id: '29536',
