@@ -1,5 +1,5 @@
 <script>
-console.log('v0.0.1');
+console.log('v0.0.2');
 const get = url => fetch(url, {
     method: 'GET',
     headers: new Headers({
@@ -17,14 +17,14 @@ if (search.code) {
     .then(e => {
         if (e.id) {
             console.log('case 2');
-            location.href = 'https://www.strava.com/oauth/authorize' + 
+            location.href = ('https://www.strava.com/oauth/authorize' + 
                 '?client_id={id}' + 
                 '&redirect_uri=http://roma.nbauer.ru/my_gpx_tracks/strava' + 
                 '&response_type=code' + 
-                '&scope=read'
+                '&scope=read')
                 .replace('{id}', e.id);
         } else {
-        console.log('case 3');
+            console.log('case 3');
             console.log(e);
         }
     });
