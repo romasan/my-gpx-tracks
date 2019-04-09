@@ -1,4 +1,23 @@
 <script>
 let search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [k, e])=>({...l, [k]: e}), {});
-console.log(search);
+if (search.code) {
+    console.log('case 1', search);
+} else {
+    get('https://www.strava.com/api/v3/athlete')
+    .then(e => e.json())
+    .then(e => {
+        if (e.id) {
+            console.log('case 2');
+            location.href = 'https://www.strava.com/oauth/authorize' + 
+                '?client_id={id}' + 
+                '&redirect_uri=http://roma.nbauer.ru/my_gpx_tracks/strava' + 
+                '&response_type=code' + 
+                '&scope=read'
+                .replace('{id}', e.id);
+        } else {
+        console.log('case 3');
+            console.log(e);
+        }
+    });
+}
 </script>
