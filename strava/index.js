@@ -9,21 +9,33 @@ const randomColor = () => '#' + (~~(Math.random() * 0xefffff) + 0x100000).toStri
 
 const addLineString = (map, conf = {}) => {
     
-    map.geoObjects.add(
-        new ymaps.GeoObject({
-            'geometry': {
-                'type': "LineString",
-                'coordinates': conf.coordinates
-            },
-            'properties': {
-                'hintContent': conf.label,
-            }   
-        }, {
-            'strokeColor': conf.color,
-            'strokeWidth': 3,
-            'strokeOpacity': 0.7
-        })
-    );
+    const o = new ymaps.GeoObject({
+        'geometry': {
+            'type': "LineString",
+            'coordinates': conf.coordinates
+        },
+        'properties': {
+            'hintContent': conf.label,
+        }   
+    }, {
+        'strokeColor': conf.color,
+        'strokeWidth': 3,
+        'strokeOpacity': 0.5
+    });
+
+    map.geoObjects.add(o);
+
+    o.events.add("hover", e => {
+        e.originalEvent.target.options.set('strokeColor', "#0000ff");
+        e.originalEvent.target.options.set('strokeOpacity', 1);
+        e.originalEvent.target.options.set('zIndex', 999);
+    });
+
+    o.events.add("mouseleave", e => {
+        e.originalEvent.target.options.set('strokeColor', "#ff0000");
+        e.originalEvent.target.options.set('strokeOpacity', 0.5);
+        e.originalEvent.target.options.set('zIndex', 0);
+    });
 };
 
 let myMap = null;
@@ -86,11 +98,14 @@ if (search.code) {
             addLineString(myMap, {
                 coordinates,
                 'label': `
-                    ${name}
-                    <div style="color: grey">${start_date}</div>
-                    <div style="color: grey">${distance} km. ${elapsed_time / 60 /60} hrs.</div>
+                    <a href="https://www.strava.com/activities/${id}" target="_blank">${name}</a>
+                    <div style="color: grey">
+                        <div>${new Date(start_date).toString().split('GMT')[0]}</div>
+                        <div>${parseFloat((distance / 1e3).toFixed(3))} km. ${parseFloat((elapsed_time / 36e2).toFixed(3))} hrs.</div>
+                        <div>Type: ${type}</div>
+                    </div>
                 `,
-                'color': 'rgba(255, 0, 0, 0.5)' // randomColor()
+                'color': '#ff0000' // randomColor()
             });
 
             myMap.setBounds(myMap.geoObjects.getBounds());
