@@ -1,6 +1,7 @@
 /**
  * Maps
  */
+
 const YReady = new Promise((resolve) => {
     ymaps.ready(resolve);
 });
@@ -47,6 +48,14 @@ const init = () => {
         'zoom': 10,
         'controls': ['zoomControl']
     });
+
+    ymaps.geolocation.get({
+        provider: 'browser',
+        mapStateAutoApply: true
+    }).then(result => {
+        result.geoObjects.options.set('preset', 'islands#blueCircleIcon');
+        myMap.geoObjects.add(result.geoObjects);
+    });
 };
 
 YReady.then(init);
@@ -86,7 +95,7 @@ if (search.code) {
     .then(e => e.json())
     .then(e => (
         token = e.access_token,
-        get('https://www.strava.com/api/v3/athlete/activities?per_page=99'.replace('{id}', e.athlete.id), token)
+        get('https://www.strava.com/api/v3/athlete/activities?per_page=200'.replace('{id}', e.athlete.id), token)
     ))
     .then(e => e.json())
     .then(list => list
@@ -101,8 +110,8 @@ if (search.code) {
                     <a href="https://www.strava.com/activities/${id}" target="_blank">${name}</a>
                     <div style="color: grey">
                         <div>${new Date(start_date).toString().split('GMT')[0]}</div>
-                        <div>${parseFloat((distance / 1e3).toFixed(3))} km. ${parseFloat((elapsed_time / 36e2).toFixed(3))} hrs.</div>
-                        <div>Type: ${type}</div>
+                        <div>${parseFloat((distance / 1e3).toFixed(3))} км. ${parseFloat((elapsed_time / 36e2).toFixed(3))} ч.</div>
+                        <div>Тип: ${type}</div>
                     </div>
                 `,
                 'color': '#ff0000' // randomColor()
