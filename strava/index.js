@@ -1,5 +1,5 @@
 /**
- * Maps
+ * YMaps
  */
 
 const YReady = new Promise((resolve) => {
@@ -8,7 +8,7 @@ const YReady = new Promise((resolve) => {
 
 const randomColor = () => '#' + (~~(Math.random() * 0xefffff) + 0x100000).toString(0x10);
 
-const addLineString = (map, conf = {}) => {
+const createLine = (conf = {}) => {
     
     const o = new ymaps.GeoObject({
         'geometry': {
@@ -24,8 +24,6 @@ const addLineString = (map, conf = {}) => {
         'strokeOpacity': 0.5
     });
 
-    map.geoObjects.add(o);
-
     o.events.add("hover", e => {
         e.originalEvent.target.options.set('strokeColor', "#0000ff");
         e.originalEvent.target.options.set('strokeOpacity', 1);
@@ -37,13 +35,16 @@ const addLineString = (map, conf = {}) => {
         e.originalEvent.target.options.set('strokeOpacity', 0.5);
         e.originalEvent.target.options.set('zIndex', 0);
     });
+
+    return o;
 };
 
-let myMap = null;
+let map = null;
+let collection = null;
 
 const init = () => {
 
-    myMap = new ymaps.Map("map", {
+    map = new ymaps.Map("map", {
         'center': [0.0, 0.0],
         'zoom': 10,
         'controls': ['zoomControl']
@@ -54,15 +55,17 @@ const init = () => {
         mapStateAutoApply: true
     }).then(result => {
         result.geoObjects.options.set('preset', 'islands#blueCircleIcon');
-        myMap.geoObjects.add(result.geoObjects);
+        map.geoObjects.add(result.geoObjects);
     });
+
+    collection = new ymaps.GeoObjectCollection();
+    map.geoObjects.add(collection);
 };
 
 YReady.then(init);
 
-
 /**
- * Strava
+ * Strava API
  */
 
 const get = (url, token) => fetch(url, {
@@ -73,6 +76,14 @@ const get = (url, token) => fetch(url, {
 });
 
 const search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [k, e])=>({...l, [k]: e}), {});
+
+const filterCollection = (collection, list, type) => {
+    list.forEach(e => {
+        if (e.type === type) {
+            collection.add(e.line);
+        }
+    })
+}
 
 if (search.code) {
 
@@ -99,27 +110,54 @@ if (search.code) {
     ))
     .then(e => e.json())
     .then(list => list
-        .filter(e => e.type === 'Ride')
-        .forEach(({ id, name, type, start_date, distance, elapsed_time, map }, i) => {
+        // .filter(e => e.type === 'Ride')
+        .map(({ id, name, type, start_date, distance, elapsed_time, map }, i) => {
 
             const coordinates = polyline.decode(map.summary_polyline);
 
-            addLineString(myMap, {
+            const date = new Date(start_date).toString().split('GMT')[0];
+            const dist = parseFloat((distance / 1e3).toFixed(3));
+            const time = parseFloat((elapsed_time / 36e2).toFixed(3));
+
+            const line = createLine({
                 coordinates,
                 'label': `
                     <a href="https://www.strava.com/activities/${id}" target="_blank">${name}</a>
                     <div style="color: grey">
-                        <div>${new Date(start_date).toString().split('GMT')[0]}</div>
-                        <div>${parseFloat((distance / 1e3).toFixed(3))} км. ${parseFloat((elapsed_time / 36e2).toFixed(3))} ч.</div>
+                        <div>${date}</div>
+                        <div>${dist} км. ${time} ч.</div>
                         <div>Тип: ${type}</div>
                     </div>
                 `,
                 'color': '#ff0000' // randomColor()
             });
-
-            myMap.setBounds(myMap.geoObjects.getBounds());
+            
+            return { id, type, line };
         })
     )
+    .then((list) => {
+
+        const types = list.reduce((l, e) => l.includes(e.type) ? l : [...l, e.type], []);
+        const type = types.includes('Ride') ? 'Ride' : types[0];
+
+        filterCollection(collection, list, type);
+        map.setBounds(collection.getBounds());
+
+        const select = document.querySelector('#types');
+        types.forEach(e => {
+            const option = document.createElement('option');
+            option.value = e;
+            option.innerText = e + ' (' + list.reduce((c, x) => c + ~~(x.type === e), 0) + ')';
+            if (e === type) { option.selected = true; }
+            select.appendChild(option);
+        });
+
+        select.addEventListener('change', e => {
+            collection.removeAll();
+            filterCollection(collection, list, e.target.value);
+            map.setBounds(collection.getBounds());
+        });
+    });
 } else {
     location.href = 'https://www.strava.com/oauth/authorize?' + [{
         client_id: 29536,
