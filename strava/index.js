@@ -58,6 +58,8 @@ const init = () => {
         map.geoObjects.add(result.geoObjects);
     });
 
+    map.controls.add('rulerControl');
+
     collection = new ymaps.GeoObjectCollection();
     map.geoObjects.add(collection);
 };
@@ -131,7 +133,7 @@ if (search.code) {
                 `,
                 'color': '#ff0000' // randomColor()
             });
-            
+
             return { id, type, line };
         })
     )
@@ -144,6 +146,7 @@ if (search.code) {
         map.setBounds(collection.getBounds());
 
         const select = document.querySelector('#types');
+
         types.forEach(e => {
             const option = document.createElement('option');
             option.value = e;
@@ -156,6 +159,23 @@ if (search.code) {
             collection.removeAll();
             filterCollection(collection, list, e.target.value);
             map.setBounds(collection.getBounds());
+        });
+
+        const labels = document.querySelector('#showLabels');
+
+        labels.addEventListener('change', e => {
+            list.forEach(({line}) => {
+                if (!e.target.checked) {
+                    line.properties.setAll({
+                        _hintContent: line.properties.getAll().hintContent,
+                        hintContent: ''
+                    });
+                } else {
+                    line.properties.setAll({
+                        hintContent: line.properties.getAll()._hintContent,
+                    });
+                }
+            });
         });
     });
 } else {
