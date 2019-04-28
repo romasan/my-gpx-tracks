@@ -70,6 +70,14 @@ YReady.then(init);
  * Strava API
  */
 
+const en_ru = {
+    'All': 'Все',
+    'Ride': 'Велосипед',
+    'Walk': 'Ходьба'
+};
+
+const i18n = (word) => en_ru[word] || word;
+
 const get = (url, token) => fetch(url, {
     method: 'GET',
     headers: new Headers({
@@ -81,7 +89,7 @@ const search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [
 
 const filterCollection = (collection, list, type) => {
     list.forEach(e => {
-        if (e.type === type) {
+        if (type === 'All' || e.type === type) {
             collection.add(e.line);
         }
     })
@@ -128,7 +136,7 @@ if (search.code) {
                     <div style="color: grey">
                         <div>${date}</div>
                         <div>${dist} км. ${time} ч.</div>
-                        <div>Тип: ${type}</div>
+                        <div>Тип: ${i18n(type)}</div>
                     </div>
                 `,
                 'color': '#ff0000' // randomColor()
@@ -139,7 +147,8 @@ if (search.code) {
     )
     .then((list) => {
 
-        const types = list.reduce((l, e) => l.includes(e.type) ? l : [...l, e.type], []);
+        let types = list.reduce((l, e) => l.includes(e.type) ? l : [...l, e.type], []);
+        types.unshift('All')
         const type = types.includes('Ride') ? 'Ride' : types[0];
 
         filterCollection(collection, list, type);
@@ -147,10 +156,12 @@ if (search.code) {
 
         const select = document.querySelector('#types');
 
+        select.children[0].remove();
+
         types.forEach(e => {
             const option = document.createElement('option');
             option.value = e;
-            option.innerText = e + ' (' + list.reduce((c, x) => c + ~~(x.type === e), 0) + ')';
+            option.innerText = i18n(e) + ' (' + list.reduce((c, x) => c + ~~(e === 'All' || x.type === e), 0) + ')';
             if (e === type) { option.selected = true; }
             select.appendChild(option);
         });

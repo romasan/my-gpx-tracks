@@ -16,16 +16,20 @@
         .bar {
             position: absolute;
             z-index: 1;
-            padding: 5px;
+            border-radius: 0px 0px 5px 0px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 6px 12px;
         }
     </style>
 </head>
 <body>
     <div class="bar">
-        <a href="./">Replay</a>
-        <select id="types"></select>
+        <a href="./">&#8634;</a>
+        <select id="types">
+            <option>Загрузка...</option>
+        </select>
         <input type="checkbox" id="showLabels" checked/>
-        <label for="showLabels">Labels</label>
+        <label for="showLabels">Описание</label>
     </div>
     <div id="map"></div>
 </body>
