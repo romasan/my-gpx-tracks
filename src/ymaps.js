@@ -6,8 +6,6 @@ const YReady = new Promise((resolve) => {
     ymaps.ready(resolve);
 });
 
-const randomColor = () => '#' + (~~(Math.random() * 0xefffff) + 0x100000).toString(0x10);
-
 export const createLine = (conf = {}) => {
     
     const o = new ymaps.GeoObject({
@@ -25,15 +23,19 @@ export const createLine = (conf = {}) => {
     });
 
     o.events.add("hover", e => {
-        e.originalEvent.target.options.set('strokeColor', "#0000ff");
-        e.originalEvent.target.options.set('strokeOpacity', 1);
-        e.originalEvent.target.options.set('zIndex', 999);
+        e.originalEvent.target.options.set({
+            'strokeColor': '#0000ff',
+            'strokeOpacity': 1,
+            'zIndex': 999
+        });
     });
 
     o.events.add("mouseleave", e => {
-        e.originalEvent.target.options.set('strokeColor', "#ff0000");
-        e.originalEvent.target.options.set('strokeOpacity', 0.5);
-        e.originalEvent.target.options.set('zIndex', 0);
+        e.originalEvent.target.options.set({
+            'strokeColor': '#ff0000',
+            'strokeOpacity': 0.5,
+            'zIndex': 0
+        });
     });
 
     return o;
@@ -47,7 +49,7 @@ const init = () => {
     Ymap = new ymaps.Map('ymap', {
         'center': [0.0, 0.0],
         'zoom': 10,
-        'controls': ['zoomControl']
+        'controls': ['zoomControl', 'rulerControl', 'typeSelector']
     });
 
     ymaps.geolocation.get({
@@ -57,9 +59,6 @@ const init = () => {
         result.geoObjects.options.set('preset', 'islands#blueCircleIcon');
         Ymap.geoObjects.add(result.geoObjects);
     });
-
-    Ymap.controls.add('rulerControl');
-    Ymap.controls.add('typeSelector');
 
     collection = new ymaps.GeoObjectCollection();
     Ymap.geoObjects.add(collection);

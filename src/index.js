@@ -55,7 +55,6 @@ if (search.code) {
     ))
     .then(e => e.json())
     .then(list => list
-        // .filter(e => e.type === 'Ride')
         .map(({ id, name, type, start_date, distance, elapsed_time, map }, i) => {
 
             const coordinates = polyline.decode(map.summary_polyline);
@@ -74,7 +73,7 @@ if (search.code) {
                         <div>Тип: ${i18n(type)}</div>
                     </div>
                 `,
-                'color': '#ff0000' // randomColor()
+                'color': '#ff0000'
             });
 
             return { id, type, line };
