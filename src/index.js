@@ -1,74 +1,5 @@
-/**
- * YMaps
- */
-
-const YReady = new Promise((resolve) => {
-    ymaps.ready(resolve);
-});
-
-const randomColor = () => '#' + (~~(Math.random() * 0xefffff) + 0x100000).toString(0x10);
-
-const createLine = (conf = {}) => {
-    
-    const o = new ymaps.GeoObject({
-        'geometry': {
-            'type': "LineString",
-            'coordinates': conf.coordinates
-        },
-        'properties': {
-            'hintContent': conf.label,
-        }   
-    }, {
-        'strokeColor': conf.color,
-        'strokeWidth': 3,
-        'strokeOpacity': 0.5
-    });
-
-    o.events.add("hover", e => {
-        e.originalEvent.target.options.set('strokeColor', "#0000ff");
-        e.originalEvent.target.options.set('strokeOpacity', 1);
-        e.originalEvent.target.options.set('zIndex', 999);
-    });
-
-    o.events.add("mouseleave", e => {
-        e.originalEvent.target.options.set('strokeColor', "#ff0000");
-        e.originalEvent.target.options.set('strokeOpacity', 0.5);
-        e.originalEvent.target.options.set('zIndex', 0);
-    });
-
-    return o;
-};
-
-let map = null;
-let collection = null;
-
-const init = () => {
-
-    map = new ymaps.Map("map", {
-        'center': [0.0, 0.0],
-        'zoom': 10,
-        'controls': ['zoomControl']
-    });
-
-    ymaps.geolocation.get({
-        provider: 'browser',
-        mapStateAutoApply: true
-    }).then(result => {
-        result.geoObjects.options.set('preset', 'islands#blueCircleIcon');
-        map.geoObjects.add(result.geoObjects);
-    });
-
-    map.controls.add('rulerControl');
-
-    collection = new ymaps.GeoObjectCollection();
-    map.geoObjects.add(collection);
-};
-
-YReady.then(init);
-
-/**
- * Strava API
- */
+import polyline from './polyline.js';
+import { Ymap, collection, createLine } from './ymaps.js';
 
 const en_ru = {
     'All': 'Все',
@@ -77,6 +8,10 @@ const en_ru = {
 };
 
 const i18n = (word) => en_ru[word] || word;
+
+/**
+ * Strava API
+ */
 
 const get = (url, token) => fetch(url, {
     method: 'GET',
@@ -152,7 +87,7 @@ if (search.code) {
         const type = types.includes('Ride') ? 'Ride' : types[0];
 
         filterCollection(collection, list, type);
-        map.setBounds(collection.getBounds());
+        Ymap.setBounds(collection.getBounds());
 
         const select = document.querySelector('#types');
 
@@ -169,7 +104,7 @@ if (search.code) {
         select.addEventListener('change', e => {
             collection.removeAll();
             filterCollection(collection, list, e.target.value);
-            map.setBounds(collection.getBounds());
+            Ymap.setBounds(collection.getBounds());
         });
 
         const labels = document.querySelector('#showLabels');

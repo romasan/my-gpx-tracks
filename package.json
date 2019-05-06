@@ -1,7 +1,7 @@
 {
-  "name": "my_gpx_tracks",
-  "version": "1.0.2",
-  "description": "My bike tracks viewer from strava export",
+  "name": "my-gpx-tracks",
+  "version": "2.0.0",
+  "description": "My bike tracks viewer",
   "scripts": {
     "start": "webpack-dev-server --config ./webpack.config.js --mode development",
     "build": "webpack --mode production"
@@ -18,13 +18,9 @@
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.9"
   },
-  "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/romasan/my_gpx_tracks.git"
+    "url": "git+https://github.com/romasan/my-gpx-tracks.git"
   },
-  "homepage": "https://romasan.github.io/my_gpx_tracks",
-  "dependencies": {
-    "lodash": "^4.17.11"
-  }
+  "homepage": "https://romasan.github.io/my-gpx-tracks"
 }

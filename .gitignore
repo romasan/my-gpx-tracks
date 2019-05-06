@@ -1,3 +1,2 @@
-node_modules/
-*.gpx
+node_modules
 package-lock.json

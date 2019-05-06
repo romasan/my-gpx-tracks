@@ -2,11 +2,11 @@ const webpack = require('webpack');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
-    entry: './src/main.js',
+    entry: './src/index.js',
     module: {
     rules: [
         {
-            test: /\.(js|jsx)$/,
+            test: /\.js$/,
             exclude: /node_modules/,
             use: ['babel-loader']
         }
