@@ -1,5 +1,6 @@
 import polyline from './polyline.js';
 import { Ymap, collection, createLine } from './ymaps.js';
+import './upload.js';
 
 const en_ru = {
     'All': 'Все',

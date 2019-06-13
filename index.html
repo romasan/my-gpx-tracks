@@ -20,6 +20,13 @@
             background: rgba(255, 255, 255, 0.7);
             padding: 6px 12px;
         }
+        .upload input {
+            display: none;
+        }
+        .upload label {
+            text-decoration: underline;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -30,6 +37,12 @@
         </select>
         <input type="checkbox" id="showLabels" checked/>
         <label for="showLabels">Описание</label>
+        <span class="upload">
+            <input id="upload" type="file"/>
+            <label for="upload">
+                Добавить
+            </label>
+        </span>
     </div>
     <div class="map" id="ymap"></div>
 </body>

@@ -7,7 +7,7 @@ const YReady = new Promise((resolve) => {
 });
 
 export const createLine = (conf = {}) => {
-    
+
     const o = new ymaps.GeoObject({
         'geometry': {
             'type': "LineString",
@@ -22,21 +22,24 @@ export const createLine = (conf = {}) => {
         'strokeOpacity': 0.5
     });
 
-    o.events.add("hover", e => {
-        e.originalEvent.target.options.set({
-            'strokeColor': '#0000ff',
-            'strokeOpacity': 1,
-            'zIndex': 999
-        });
-    });
+    if (!conf.manual) {
 
-    o.events.add("mouseleave", e => {
-        e.originalEvent.target.options.set({
-            'strokeColor': '#ff0000',
-            'strokeOpacity': 0.5,
-            'zIndex': 0
+        o.events.add("hover", e => {
+            e.originalEvent.target.options.set({
+                'strokeColor': '#0000ff',
+                'strokeOpacity': 1,
+                'zIndex': 999
+            });
         });
-    });
+    
+        o.events.add("mouseleave", e => {
+            e.originalEvent.target.options.set({
+                'strokeColor': '#ff0000',
+                'strokeOpacity': 0.5,
+                'zIndex': 0
+            });
+        });
+    }
 
     return o;
 };
