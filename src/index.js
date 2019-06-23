@@ -1,3 +1,4 @@
+import { client_id, client_secret } from './conf.json';
 import polyline from './polyline.js';
 import { Ymap, collection, createLine } from './ymaps.js';
 import './upload.js';
@@ -23,9 +24,17 @@ const get = (url, token) => fetch(url, {
 
 const search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [k, e])=>({...l, [k]: e}), {});
 
-const filterCollection = (collection, list, type) => {
+const filterCollection = ({ collection, list, type, id }) => {
+
+    collection.removeAll();
+
     list.forEach(e => {
-        if (type === 'All' || e.type === type) {
+
+        if (type && (type === 'All' || e.type === type)) {
+            collection.add(e.line);
+        }
+
+        if (id && e.id === id) {
             collection.add(e.line);
         }
     })
@@ -37,8 +46,8 @@ if (search.code) {
 
     fetch(
         'https://www.strava.com/oauth/token?' + [{
-            client_id: 29536,
-            client_secret: '37c9da3a9b91852ab74f08d70259d5be24ca7a48',
+            client_id,
+            client_secret,
             code: search.code,
             grant_type: 'authorization_code'
         }]
@@ -67,7 +76,8 @@ if (search.code) {
             const line = createLine({
                 coordinates,
                 'label': `
-                    <a href="https://www.strava.com/activities/${id}" target="_blank">${name}</a>
+                    <a href="https://www.strava.com/activities/${id}" target="_blank">${name}</a>&nbsp;
+                    <a href="#${id}" class="only_me">#</a>
                     <div style="color: grey">
                         <div>${date}</div>
                         <div>${dist} км. ${time} ч.</div>
@@ -86,7 +96,7 @@ if (search.code) {
         types.unshift('All')
         const type = types.includes('Ride') ? 'Ride' : types[0];
 
-        filterCollection(collection, list, type);
+        filterCollection({collection, list, type});
         Ymap.setBounds(collection.getBounds());
 
         const select = document.querySelector('#types');
@@ -102,8 +112,8 @@ if (search.code) {
         });
 
         select.addEventListener('change', e => {
-            collection.removeAll();
-            filterCollection(collection, list, e.target.value);
+            const type = e.target.value;
+            filterCollection({collection, list, type});
             Ymap.setBounds(collection.getBounds());
         });
 
@@ -123,10 +133,18 @@ if (search.code) {
                 }
             });
         });
+
+        document.body.addEventListener('click', e => {
+            if (e.target.classList.contains('only_me')) {
+                const id = Number(e.target.href.split('#').pop());
+                filterCollection({collection, list, id});
+                e.preventDefault();
+            }
+        });
     });
 } else {
     location.href = 'https://www.strava.com/oauth/authorize?' + [{
-        client_id: 29536,
+        client_id,
         redirect_uri: location.href.split('?')[0],
         response_type: 'code',
         scope: 'read,activity:read_all,profile:read_all,read_all'
