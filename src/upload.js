@@ -1,5 +1,3 @@
-import get from 'lodash/get';
-
 import { collection, createLine } from './ymaps.js';
 
 const handleFileSelect = e => new Promise(resolve => {
@@ -16,6 +14,8 @@ const handleFileSelect = e => new Promise(resolve => {
         reader.readAsText(file);
     }
 });
+
+const get = (e, p) => p.reduce((p, n) => p && p[n], (e, p))
 
 const calcDistance = ([lat1, lon1], [lat2, lon2]) => {
     const {sin, cos, acos, PI} = Math;
@@ -36,13 +36,10 @@ const parseGPX = raw => {
 
     let el = document.createElement('div');
     el.innerHTML = raw;
-    const title = get(el, 'children[0].children[1].children[0].innerText');
-    const date = get(el, 'children[0].children[0].children[0].innerText', '').replace(/[TZ]/g, ' ');
-    const isTrack = get(el, 'children[0].children[1].children[2].children.length');
-    const segments = [...(isTrack
-        ? get(el, 'children[0].children[1].children[2].children', [])
-        : get(el, 'children[0].children[1].children[3].children', [])
-    )];
+
+    const title = (el.querySelector('gpx metadata name') || el.querySelector('gpx trk name') || {}).innerText;
+    const date = (el.querySelector('gpx metadata time') || {}).innerText;
+    const segments = [...(el.querySelector('gpx trk trkseg') || {}).children || []];
 
     let coordinates = segments
         .map(item => ([
@@ -60,14 +57,15 @@ const parseGPX = raw => {
 
     const label = `
         <div style="color: grey">
-            <div>${date}</div>
+            ${title ? `<div>${title}</div>` : ''}
+            ${date ? `<div>${date}</div>` : ''}
             <div>${distance} км.</div>
         </div>
     `;
     
     const duration = ((
         new Date(get(segments, [segments.length - 1, 'children', 1, 'innerText'])) -
-        new Date(get(segments, '[0].children[1].innerText'))
+        new Date(get(segments, [0, 'children', 1, 'innerText']))
     ) / 36e5).toFixed(2);
 
     return { coordinates, label, date, distance, duration };
