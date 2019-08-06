@@ -15,7 +15,7 @@ const handleFileSelect = e => new Promise(resolve => {
     }
 });
 
-const get = (e, p) => p.reduce((p, n) => p && p[n], (e, p))
+const get = (e, p) => p.reduce((e, k) => e && e[k], e);
 
 const calcDistance = ([lat1, lon1], [lat2, lon2]) => {
     const {sin, cos, acos, PI} = Math;
@@ -39,7 +39,7 @@ const parseGPX = raw => {
 
     const title = (el.querySelector('gpx metadata name') || el.querySelector('gpx trk name') || {}).innerText;
     const date = (el.querySelector('gpx metadata time') || {}).innerText;
-    const segments = [...(el.querySelector('gpx trk trkseg') || {}).children || []];
+    const segments = [...((el.querySelector('gpx trk trkseg') || {}).children || [])];
 
     let coordinates = segments
         .map(item => ([

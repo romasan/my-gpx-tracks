@@ -1,7 +1,9 @@
 const webpack = require('webpack');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
-module.exports = {
+const production = process.env.npm_lifecycle_event === 'build';
+
+const config = {
     entry: './src/index.js',
     module: {
     rules: [
@@ -16,20 +18,26 @@ module.exports = {
         extensions: ['*', '.js']
     },
     output: {
-      path: __dirname + '/dist',
-      publicPath: '/dist',
-      filename: 'bundle.js'
+        path: __dirname + '/dist',
+        publicPath: '/dist',
+        filename: 'bundle.js'
     },
     optimization: {
         minimizer: [
             new UglifyJsPlugin({})
         ]
     },
-    plugins: [
-        new webpack.HotModuleReplacementPlugin()
-    ],
+    plugins: [],
     devServer: {
-      contentBase: './',
-      hot: true
+        contentBase: './',
+        hot: true
     }
-  };
+};
+
+if (!production) {
+    config.plugins.push(
+        new webpack.HotModuleReplacementPlugin()
+    )
+}
+
+module.exports = config;
