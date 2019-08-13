@@ -24,13 +24,19 @@ const get = (url, token) => fetch(url, {
 
 const search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [k, e])=>({...l, [k]: e}), {});
 
-const filterCollection = ({ collection, list, type, id }) => {
+const filterCollection = ({ collection, list, type, year, id }) => {
+
+    console.log('filterCollection', { collection, list, type, year, id });
 
     collection.removeAll();
 
     list.forEach(e => {
 
         if (type && (type === 'All' || e.type === type)) {
+            collection.add(e.line);
+        }
+
+        if (year && (year === 'Год' || e.year == year)) {
             collection.add(e.line);
         }
 
@@ -73,6 +79,8 @@ if (search.code) {
             const dist = parseFloat((distance / 1e3).toFixed(3));
             const time = parseFloat((elapsed_time / 36e2).toFixed(3));
 
+            const year = Number(date.split(' ')[3]);
+
             const line = createLine({
                 coordinates,
                 'label': `
@@ -87,35 +95,57 @@ if (search.code) {
                 'color': '#ff0000'
             });
 
-            return { id, type, line };
+            return { id, type, line, year };
         })
     )
     .then((list) => {
 
+        // ---
+
         let types = list.reduce((l, e) => l.includes(e.type) ? l : [...l, e.type], []);
-        types.unshift('All')
+        types.unshift('All');
         const type = types.includes('Ride') ? 'Ride' : types[0];
 
         filterCollection({collection, list, type});
         Ymap.setBounds(collection.getBounds());
 
-        const select = document.querySelector('#types');
-
-        select.children[0].remove();
+        const typesList = document.querySelector('#types');
+        typesList.children[0].remove();
 
         types.forEach(e => {
             const option = document.createElement('option');
             option.value = e;
             option.innerText = i18n(e) + ' (' + list.reduce((c, x) => c + ~~(e === 'All' || x.type === e), 0) + ')';
             if (e === type) { option.selected = true; }
-            select.appendChild(option);
+            typesList.appendChild(option);
         });
 
-        select.addEventListener('change', e => {
+        typesList.addEventListener('change', e => {
             const type = e.target.value;
             filterCollection({collection, list, type});
             Ymap.setBounds(collection.getBounds());
         });
+
+        // ---
+
+        let years = list.reduce((l, e) => l.includes(e.year) ? l : [...l, e.year], []);
+
+        const yearsList = document.querySelector('#years');
+
+        years.forEach(e => {
+            const option = document.createElement('option');
+            option.value = e;
+            option.innerText = e;
+            yearsList.appendChild(option);
+        });
+
+        yearsList.addEventListener('change', e => {
+            const year = e.target.value;
+            filterCollection({collection, list, year});
+            Ymap.setBounds(collection.getBounds());
+        });
+
+        // ---
 
         const labels = document.querySelector('#showLabels');
 
