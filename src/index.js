@@ -26,17 +26,14 @@ const search = [...(new URL(location.href)).searchParams.entries()].reduce((l, [
 
 const filterCollection = ({ collection, list, type, year, id }) => {
 
-    console.log('filterCollection', { collection, list, type, year, id });
-
     collection.removeAll();
 
     list.forEach(e => {
 
-        if (type && (type === 'All' || e.type === type)) {
-            collection.add(e.line);
-        }
-
-        if (year && (year === 'Год' || e.year == year)) {
+        if (
+            (type === 'All' || e.type === type) &&
+            (year === 'Год' || e.year == year)
+        ) {
             collection.add(e.line);
         }
 
@@ -95,18 +92,21 @@ if (search.code) {
                 'color': '#ff0000'
             });
 
-            return { id, type, line, year };
+            return { id, type, line, year, dist };
         })
     )
     .then((list) => {
 
-        // ---
+        let type = 'Ride';
+        let year = 'Год';
 
+        // ---
+        
         let types = list.reduce((l, e) => l.includes(e.type) ? l : [...l, e.type], []);
         types.unshift('All');
-        const type = types.includes('Ride') ? 'Ride' : types[0];
+        type = types.includes('Ride') ? 'Ride' : types[0];
 
-        filterCollection({collection, list, type});
+        filterCollection({collection, list, type, year});
         Ymap.setBounds(collection.getBounds());
 
         const typesList = document.querySelector('#types');
@@ -121,8 +121,8 @@ if (search.code) {
         });
 
         typesList.addEventListener('change', e => {
-            const type = e.target.value;
-            filterCollection({collection, list, type});
+            type = e.target.value;
+            filterCollection({collection, list, type, year});
             Ymap.setBounds(collection.getBounds());
         });
 
@@ -135,13 +135,13 @@ if (search.code) {
         years.forEach(e => {
             const option = document.createElement('option');
             option.value = e;
-            option.innerText = e;
+            option.innerText = e + (e !== 'Год' ? (' (' + ~~list.reduce((c, x) => c + (x.year == e ? x.dist : 0), 0) + ' km)') : '');
             yearsList.appendChild(option);
         });
 
         yearsList.addEventListener('change', e => {
-            const year = e.target.value;
-            filterCollection({collection, list, year});
+            year = e.target.value;
+            filterCollection({collection, list, type, year});
             Ymap.setBounds(collection.getBounds());
         });
 
