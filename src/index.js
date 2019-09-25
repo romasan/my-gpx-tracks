@@ -132,12 +132,17 @@ if (search.code) {
 
         const yearsList = document.querySelector('#years');
 
-        years.forEach(e => {
-            const option = document.createElement('option');
-            option.value = e;
-            option.innerText = e + (e !== 'Год' ? (' (' + ~~list.reduce((c, x) => c + (x.year == e ? x.dist : 0), 0) + ' km)') : '');
-            yearsList.appendChild(option);
-        });
+        const updateYearsList = () => {
+
+            years.forEach(e => {
+                const option = document.createElement('option');
+                option.value = e;
+                const countOnYear = ~~list.reduce((c, x) => c + (x.year == e ? x.dist : 0), 0);
+                option.innerText = e + (e !== 'Год' ? ` (${countOnYear} km)` : '');
+                yearsList.appendChild(option);
+            });
+        }
+        updateYearsList();
 
         yearsList.addEventListener('change', e => {
             year = e.target.value;
