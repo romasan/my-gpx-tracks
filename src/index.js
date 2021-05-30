@@ -11,6 +11,24 @@ const en_ru = {
 
 const i18n = (word) => en_ru[word] || word;
 
+function Random(seed) {
+    this._seed = seed % 2147483647;
+    if (this._seed <= 0) this._seed += 2147483646;
+}
+
+Random.prototype.next = function () {
+    return this._seed = this._seed * 16807 % 2147483647;
+};
+
+Random.prototype.nextFloat = function () {
+    return (this.next() - 1) / 2147483646;
+};
+
+const randomColor = (seed = 1) => {
+    const r = new Random(seed);
+    return '#' + Math.floor(0x100000 + r.nextFloat() * 0xefffff).toString(16);
+}
+
 /**
  * Strava API
  */
@@ -67,8 +85,23 @@ if (search.code) {
         get('https://www.strava.com/api/v3/athlete/activities?per_page=200'.replace('{id}', e.athlete.id), token)
     ))
     .then(e => e.json())
-    .then(list => list
-        .map(({ id, name, type, start_date, distance, elapsed_time, map }, i) => {
+    .then(list => {
+        const _colors = [
+            '#FF0000',
+            // '#FF7F00',
+            // '#FFFF00',
+            '#00FF00',
+            '#0000FF',
+            // '#2E2B5F',
+            '#8B00FF',
+        ];
+        const years = list
+            .map(({ start_date }) => new Date(start_date).toString().split(' ')[3])
+            .reduce((l, e) => l.includes(e) ? l : l.concat([e]), []);
+        // const colors = years.reduce((l, e) => ({ ...l, [e]: randomColor(Number(e)) }), {});
+        const colors = years.reduce((l, e) => ({ ...l, [e]: _colors.shift() }), {});
+
+        return list.map(({ id, name, type, start_date, distance, elapsed_time, map }, i) => {
 
             const coordinates = polyline.decode(map.summary_polyline);
 
@@ -77,6 +110,7 @@ if (search.code) {
             const time = parseFloat((elapsed_time / 36e2).toFixed(3));
 
             const year = Number(date.split(' ')[3]);
+            const color = colors[year];
 
             const line = createLine({
                 coordinates,
@@ -89,12 +123,12 @@ if (search.code) {
                         <div>Тип: ${i18n(type)}</div>
                     </div>
                 `,
-                'color': '#ff0000'
+                'color': color,
             });
 
             return { id, type, line, year, dist };
         })
-    )
+    })
     .then((list) => {
 
         let type = 'Ride';

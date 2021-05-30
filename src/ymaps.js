@@ -34,7 +34,7 @@ export const createLine = (conf = {}) => {
     
         o.events.add("mouseleave", e => {
             e.originalEvent.target.options.set({
-                'strokeColor': '#ff0000',
+                'strokeColor': conf.color,
                 'strokeOpacity': 0.5,
                 'zIndex': 0
             });
