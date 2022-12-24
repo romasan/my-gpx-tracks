@@ -177,7 +177,8 @@ if (search.code) {
         const option = document.createElement('option');
         option.value = e;
         const countOnYear = ~~list.reduce((c, x) => c + (x.year == e ? x.dist : 0), 0);
-        option.innerText = e + (e !== 'Год' ? ` (${countOnYear} km)` : '');
+        const countOfYear = ~~list.reduce((c, x) => c + (x.year == e ? 1 : 0), 0);
+        option.innerText = e + (e !== 'Год' ? ` (${countOnYear} km / ${countOfYear})` : '');
         yearsList.appendChild(option);
       });
     }
