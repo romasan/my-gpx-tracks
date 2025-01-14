@@ -2,6 +2,7 @@ import { client_id, client_secret } from './conf.json';
 import polyline from './polyline.js';
 import { Ymap, collection, createLine } from './ymaps.js';
 import './upload.js';
+import { getGradient } from './colors.js';
 
 const en_ru = {
   'All': 'Все',
@@ -93,19 +94,20 @@ if (search.code) {
       list = [...list, ...json]
     }
 
-    const _colors = [
-      '#FF0000',
-      // '#FF7F00',
-      // '#FFFF00',
-      '#00FF00',
-      '#0000FF',
-      // '#2E2B5F',
-      '#8B00FF',
-    ];
+    // const _colors = [
+    //   '#FF0000',
+    //   // '#FF7F00',
+    //   // '#FFFF00',
+    //   '#00FF00',
+    //   '#0000FF',
+    //   // '#2E2B5F',
+    //   '#8B00FF',
+    // ];
     let years = list
       .map(({ start_date }) => new Date(start_date).toString().split(' ')[3])
       .reduce((l, e) => l.includes(e) ? l : l.concat([e]), []);
     // const colors = years.reduce((l, e) => ({ ...l, [e]: randomColor(Number(e)) }), {});
+    const _colors = getGradient(years.length);
     const colors = years.reduce((l, e) => ({ ...l, [e]: _colors.shift() }), {});
 
     list = list.map(({ id, name, type, start_date, distance, elapsed_time, map }, i) => {
